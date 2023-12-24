@@ -75,6 +75,13 @@ def get_eta_in_mins(prediction):
     eta_mins = (arr_secs - pre_secs) // 60
     return eta_mins
 
+def log_and_reset(e):
+    # Handle unexpected errors by performing soft reset
+    print(e)
+    print('Soft reset in 30 seconds...')
+    time.sleep(30)
+    machine.soft_reset()
+
 
 
 ###
@@ -112,11 +119,7 @@ try:
     for led in leds:
         led.blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
-    # Handle connection error by performing soft reset
-    print(e)
-    print('Soft reset in 30 seconds...')
-    time.sleep(30)
-    machine.soft_reset()
+    log_and_reset(e)
 
 while True:
     try:
@@ -153,8 +156,4 @@ while True:
         # Wait for the next API call
         time.sleep(api_interval)
     except Exception as e:
-        # Handle unexpected errors by performing soft reset
-        print(e)
-        print('Soft reset in 10 seconds...')
-        time.sleep(10)
-        machine.soft_reset()
+        log_and_reset(e)
