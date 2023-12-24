@@ -51,7 +51,7 @@ def fetch_predictions():
         print('Unexpected API response:')
         print(response.text)
         return ([], 1)
-    except requests.exceptions.RequestException:
+    except Exception:
         print('Request failed')
         return ([], 1)
 
