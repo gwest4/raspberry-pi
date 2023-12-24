@@ -142,7 +142,9 @@ while True:
         etas = set(filter(lambda e: e < len(leds), etas))
         if len(etas) > 0:
             for i, led in enumerate(leds):
-                if i in etas: # Turn eta LED on if not already
+                # Loop through all LEDs for which there is an ETA
+                if i in etas:
+                    # Turn ETA LED on if not already
                     if not led.is_active:
                         if i == 0:
                             led.pulse(fade_in_time=1, fade_out_time=2)
@@ -152,6 +154,7 @@ while True:
                         if i == 5 and notif_scheduled:
                             notif_scheduled = False
                             speaker.play(notif_sound, wait=False)
+                # Turn off LEDs that don't have an associated ETA
                 else:
                     led.off()
         elif status == 0:
