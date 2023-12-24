@@ -144,7 +144,10 @@ while True:
             for i, led in enumerate(leds):
                 if i in etas: # Turn eta LED on if not already
                     if not led.is_active:
-                        led.pulse(fade_in_time=1, fade_out_time=2)
+                        if i == 0:
+                            led.pulse(fade_in_time=1, fade_out_time=2)
+                        else:
+                            led.on()
                         # If ETA is 5 mins, play notification if scheduled
                         if i == 5 and notif_scheduled:
                             notif_scheduled = False
