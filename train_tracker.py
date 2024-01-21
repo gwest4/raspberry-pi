@@ -3,6 +3,7 @@ from picozero import LED, Speaker, Button
 
 station_id = '41180' # Kedzie to Loop (Brown Line)
 dest_name = 'Loop'   # Destination to filter trains at the above stop
+notif_mins_out = 4   # How many mins out an ETA will trigger the notification
 wlan_ssid = 'West 2G'
 wlan_password = 'fudgiemilkyway204'
 api_key = 'baeac4e81d284f258876778afedacb25'
@@ -141,8 +142,8 @@ while True:
                 if i in etas: # Turn eta LED on if not already
                     if not led.is_active:
                         led.pulse(fade_in_time=1, fade_out_time=2)
-                        # If ETA is 5 mins, play notification if scheduled
-                        if i == 5 and notif_scheduled:
+                        # Play notification if scheduled
+                        if i == notif_mins_out and notif_scheduled:
                             notif_scheduled = False
                             speaker.play(notif_sound, wait=False)
                 else:
