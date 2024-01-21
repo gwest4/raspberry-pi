@@ -121,8 +121,8 @@ try:
 except RuntimeError as e:
     log_and_reset(e)
 
-while True:
-    try:
+try:
+    while True:
         # Get all predictions for the specified station
         predictions, status = fetch_predictions()
         if status == 1:
@@ -161,5 +161,5 @@ while True:
                 leds[0].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
         time.sleep(api_interval)
-    except Exception as e:
-        log_and_reset(e)
+except Exception as e:
+    log_and_reset(e)
