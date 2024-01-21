@@ -140,23 +140,22 @@ try:
         etas = list(map(get_eta_in_mins, predictions))
         # Filter out ETAs further out than we can handle with our LED display
         etas = set(filter(lambda e: e < len(leds), etas))
-        if len(etas) > 0:
-            for i, led in enumerate(leds):
-                # Loop through all LEDs for which there is an ETA
-                if i in etas:
-                    # Turn ETA LED on if not already
-                    if not led.is_active:
-                        if i == 0:
-                            led.pulse(fade_in_time=1, fade_out_time=2)
-                        else:
-                            led.on()
-                        # Play notification if scheduled
-                        if i == notif_mins_out and notif_scheduled:
-                            notif_scheduled = False
-                            speaker.play(notif_sound, wait=False)
-                # Turn off LEDs that don't have an associated ETA
-                else:
-                    led.off()
+        for i, led in enumerate(leds):
+            # Loop through all LEDs for which there is an ETA
+            if i in etas:
+                # Turn ETA LED on if not already
+                if not led.is_active:
+                    if i == 0:
+                        led.pulse(fade_in_time=1, fade_out_time=2)
+                    else:
+                        led.on()
+                    # Play notification if scheduled
+                    if i == notif_mins_out and notif_scheduled:
+                        notif_scheduled = False
+                        speaker.play(notif_sound, wait=False)
+            # Turn off LEDs that don't have an associated ETA
+            else:
+                led.off()
         elif status == 0:
             leds[9].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
