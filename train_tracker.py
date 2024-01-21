@@ -158,7 +158,7 @@ try:
                 else:
                     led.off()
         elif status == 0:
-                leds[9].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
+            leds[9].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
         time.sleep(api_interval)
 except Exception as e:
