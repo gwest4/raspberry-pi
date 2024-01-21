@@ -81,10 +81,9 @@ def get_eta_in_mins(prediction):
 # Main program
 #
 
-leds = [LED(0), LED(1), LED(2), LED(3), LED(4), LED(5), LED(6),
-        LED(7), LED(8), LED(9)]
-speaker = Speaker(14)
-button = Button(15)
+leds = [LED(0),LED(1),LED(4),LED(5),LED(6),LED(7),LED(9),LED(10),LED(11),LED(12)]
+speaker = Speaker(18)
+button = Button(21)
 api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
         { 'mapid': station_id, 'key': api_key, 'outputType': 'JSON' })
 cons_errs = 0
