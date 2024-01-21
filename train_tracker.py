@@ -89,9 +89,10 @@ def log_and_reset(e):
 # Main program
 #
 
-leds = [LED(0),LED(1),LED(4),LED(5),LED(6),LED(7),LED(9),LED(10),LED(11),LED(12)]
-speaker = Speaker(18)
-button = Button(21)
+leds = [LED(0), LED(1), LED(2), LED(3), LED(4), LED(5), LED(6),
+        LED(7), LED(8), LED(9)]
+# speaker = Speaker(14)
+button = Button(15)
 api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
         { 'mapid': station_id, 'key': api_key, 'outputType': 'JSON' })
 cons_errs = 0
@@ -101,11 +102,11 @@ notif_scheduled = False
 def schedule_notif():
     global notif_scheduled
     notif_scheduled = not notif_scheduled
-    speaker.off()
-    if notif_scheduled:
-        speaker.play([['c6', .1], ['e6', .1], ['g6', .1]], wait=False)
-    else:
-        speaker.play([['g6', .1], ['c6', .1]], wait=False)
+    # speaker.off()
+    # if notif_scheduled:
+    #     speaker.play([['c6', .1], ['e6', .1], ['g6', .1]], wait=False)
+    # else:
+    #     speaker.play([['g6', .1], ['c6', .1]], wait=False)
 button.when_pressed = schedule_notif
 
 # Test the LEDs
