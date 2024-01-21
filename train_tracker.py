@@ -90,6 +90,7 @@ def log_and_reset(e):
 #
 
 leds = [LED(0),LED(1),LED(4),LED(5),LED(6),LED(7),LED(9),LED(10),LED(11),LED(12)]
+indicator_led = leds[9]
 speaker = Speaker(18)
 button = Button(21)
 api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
@@ -131,7 +132,7 @@ try:
             cons_errs += 1
             if cons_errs == max_cons_errs:
                 raise RuntimeError('Too many consecutive errors')
-            leds[0].blink(on_time=.01, off_time=.25, n=3)
+            indicator_led.blink(on_time=.01, off_time=.25, n=3)
         elif status == 0:
             cons_errs = 0
         # Filter predictions for specified destination
@@ -156,8 +157,8 @@ try:
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
-        elif status == 0:
-            leds[9].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
+        if status == 0 and len(etas) == 0:
+            indicator_led.pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
         time.sleep(api_interval)
 except Exception as e:
