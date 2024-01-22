@@ -97,6 +97,7 @@ api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
         { 'mapid': station_id, 'key': api_key, 'outputType': 'JSON' })
 cons_errs = 0
 notif_scheduled = False
+timer = None
 
 # Schedule/unschedule notifications with the button
 def schedule_notif():
@@ -107,7 +108,22 @@ def schedule_notif():
         speaker.play([['c6', .1], ['e6', .1], ['g6', .1]], wait=False)
     else:
         speaker.play([['g6', .1], ['c6', .1]], wait=False)
-button.when_pressed = schedule_notif
+        
+def on_press():
+    global timer
+    timer = machine.Timer(period=3000,
+                          mode=machine.Timer.ONE_SHOT,
+                          callback=lambda t:machine.reset())
+    
+def on_release():
+    global timer
+    if timer:
+        timer.deinit()
+        timer = None
+        schedule_notif()
+    
+button.when_pressed = on_press
+button.when_released = on_release
 
 # Test the LEDs
 for led in leds:
