@@ -117,8 +117,9 @@ time.sleep(1.01)
 # Connect to Wi-Fi
 try:
     connect_wlan()
-    for led in leds:
-        led.blink(on_time=0.01, n=1, wait=True) # Synchronous
+    for led_group in [[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]:
+        leds[led_group[0]].blink(on_time=0.01, n=1)
+        leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
     log_and_reset(e)
 
