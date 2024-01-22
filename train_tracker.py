@@ -79,9 +79,9 @@ def get_eta_in_mins(prediction):
 def log_and_reset(e):
     # Handle unexpected errors by performing soft reset
     print(e)
-    print('Soft reset in 30 seconds...')
+    print('Reset in 30 seconds...')
     time.sleep(30)
-    machine.soft_reset()
+    machine.reset()
 
 
 
