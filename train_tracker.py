@@ -13,6 +13,7 @@ wlan_password = 'fudgiemilkyway204'
 api_key = 'baeac4e81d284f258876778afedacb25'
 api_interval = 15
 max_cons_errs = 8
+reset_hour = 3 # Which hour to reset each day (0-23)
 notif_sound = [ ['e5', 1/4], # So Long, Farewell (Sound of Music)
                 ['g5', 3/4], ['e5', 1/4], ['g5', 3/4], ['e5', 1/4],
                 ['c5', 1/4], ['d5', 1/4], ['e5', 1/4], ['f5', 1/4], ['g5', 1/4], ['a5', 2/4], ['e5', 1/4],
@@ -34,6 +35,7 @@ api_url = ('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
 cons_errs = 0
 notif_scheduled = False
 timer = None
+startup_ticks = time.ticks_ms()
 
 def connect_wlan():
     wlan = network.WLAN(network.STA_IF)
@@ -117,6 +119,13 @@ def on_release():
         timer = None
         schedule_notif()
     
+def check_scheduled_reset():
+    (_, _, _, hour, _, _, _, _) = time.localtime()
+    startup_diff = time.ticks_diff(time.ticks_ms(), startup_ticks)
+    hours_since_startup = startup_diff / 1000 / 60 / 60
+    if hour == reset_hour and hours_since_startup > 1:
+        log_and_reset('Performing scheduled reset')
+
 button.when_pressed = on_press
 button.when_released = on_release
 
@@ -138,6 +147,7 @@ except RuntimeError as e:
 # Run the main loop
 try:
     while True:
+        check_scheduled_reset()
         # Get all predictions for the specified station
         predictions, status = fetch_predictions()
         if status == 1:
