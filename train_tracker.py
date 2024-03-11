@@ -24,10 +24,10 @@ notif_sound = [ ['e5', 1/4], # So Long, Farewell (Sound of Music)
 # Globals
 #
 leds = [LED(0), LED(1), LED(2), LED(3), LED(4),
-        LED(5), LED(6), LED(7), LED(8), LED(9)]
+        LED(5), LED(6), LED(7), LED(8), LED(9), LED(10)]
 # speaker = Speaker(14)
 button = Button(15)
-indicator_led = leds[9]
+indicator_led = leds[10]
 api_url = ('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
     + '?mapid=' + station_id
     + '&key=' + api_key
