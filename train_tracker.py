@@ -176,7 +176,7 @@ try:
                     # Play notification if scheduled
                     if i == notif_mins_out and notif_scheduled:
                         notif_scheduled = False
-                        speaker.play(notif_sound, wait=False)
+                        # speaker.play(notif_sound, wait=False)
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
