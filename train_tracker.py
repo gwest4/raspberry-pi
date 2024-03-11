@@ -1,6 +1,10 @@
 import json, machine, network, re, requests, time, ntptime
 from picozero import LED, Speaker, Button
 
+###
+# Configuration
+#
+
 station_id = '41180' # Kedzie to Loop (Brown Line)
 dest_name = 'Loop'   # Destination to filter trains at the above stop
 notif_mins_out = 4   # How many mins out an ETA will trigger the notification
@@ -14,6 +18,22 @@ notif_sound = [ ['e5', 1/4], # So Long, Farewell (Sound of Music)
                 ['c5', 1/4], ['d5', 1/4], ['e5', 1/4], ['f5', 1/4], ['g5', 1/4], ['a5', 2/4], ['e5', 1/4],
                 ['g5', 3/4], ['e5', 1/4], ['g5', 3/4], ['e5', 1/4],
                 ['c5', 1/4], ['d5', 1/4], ['e5', 1/4], ['f5', 1/4], ['g5', 1/4], ['a5', 2/4], [None, 1/4] ]
+
+###
+# Globals
+#
+leds = [LED(0), LED(1), LED(4), LED(5), LED(6),
+        LED(7), LED(9), LED(10), LED(11), LED(12)]
+speaker = Speaker(18)
+button = Button(21)
+indicator_led = leds[9]
+api_url = ('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
+    + '?mapid=' + station_id
+    + '&key=' + api_key
+    + '&outputType=JSON')
+cons_errs = 0
+notif_scheduled = False
+timer = None
 
 def connect_wlan():
     wlan = network.WLAN(network.STA_IF)
@@ -33,14 +53,6 @@ def connect_wlan():
     else:
         status = wlan.ifconfig()
         print('Connected to {} (IP={})'.format(wlan_ssid, status[0]))
-        
-def format_url(url, params):
-    if not params:
-        return url
-    params_list = []
-    for k, v in params.items():
-        params_list.append('='.join((k, v)))
-    return url + '?' + '&'.join(params_list)
 
 def fetch_predictions():
     try:
@@ -76,28 +88,11 @@ def get_eta_in_mins(prediction):
     eta_mins = (arr_secs - pre_secs) // 60
     return eta_mins
 
-def log_and_reset(e):
-    # Handle unexpected errors by performing soft reset
-    print(e)
+def log_and_reset(err_or_str):
+    print(err_or_str)
     print('Reset in 30 seconds...')
     time.sleep(30)
     machine.reset()
-
-
-
-###
-# Main program
-#
-
-leds = [LED(0),LED(1),LED(4),LED(5),LED(6),LED(7),LED(9),LED(10),LED(11),LED(12)]
-indicator_led = leds[9]
-speaker = Speaker(18)
-button = Button(21)
-api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
-        { 'mapid': station_id, 'key': api_key, 'outputType': 'JSON' })
-cons_errs = 0
-notif_scheduled = False
-timer = None
 
 # Schedule/unschedule notifications with the button
 def schedule_notif():
@@ -140,6 +135,7 @@ try:
 except RuntimeError as e:
     log_and_reset(e)
 
+# Run the main loop
 try:
     while True:
         # Get all predictions for the specified station
