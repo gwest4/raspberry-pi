@@ -1,4 +1,4 @@
-import json, machine, network, re, requests, time
+import json, machine, network, re, requests, time, ntptime
 from picozero import LED, Speaker, Button
 
 station_id = '41180' # Kedzie to Loop (Brown Line)
@@ -133,6 +133,7 @@ time.sleep(1.01)
 # Connect to Wi-Fi
 try:
     connect_wlan()
+    ntptime.settime()
     for led_group in [[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]:
         leds[led_group[0]].blink(on_time=0.01, n=1)
         leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
