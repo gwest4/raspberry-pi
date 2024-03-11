@@ -79,9 +79,9 @@ def get_eta_in_mins(prediction):
 def log_and_reset(e):
     # Handle unexpected errors by performing soft reset
     print(e)
-    print('Soft reset in 30 seconds...')
+    print('Reset in 30 seconds...')
     time.sleep(30)
-    machine.soft_reset()
+    machine.reset()
 
 
 
@@ -91,12 +91,14 @@ def log_and_reset(e):
 
 leds = [LED(0), LED(1), LED(2), LED(3), LED(4), LED(5), LED(6),
         LED(7), LED(8), LED(9)]
+indicator_led = leds[9]
 # speaker = Speaker(14)
 button = Button(15)
 api_url = format_url('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx',
         { 'mapid': station_id, 'key': api_key, 'outputType': 'JSON' })
 cons_errs = 0
 notif_scheduled = False
+timer = None
 
 # Schedule/unschedule notifications with the button
 def schedule_notif():
@@ -107,7 +109,22 @@ def schedule_notif():
     #     speaker.play([['c6', .1], ['e6', .1], ['g6', .1]], wait=False)
     # else:
     #     speaker.play([['g6', .1], ['c6', .1]], wait=False)
-button.when_pressed = schedule_notif
+        
+def on_press():
+    global timer
+    timer = machine.Timer(period=3000,
+                          mode=machine.Timer.ONE_SHOT,
+                          callback=lambda t:machine.reset())
+    
+def on_release():
+    global timer
+    if timer:
+        timer.deinit()
+        timer = None
+        schedule_notif()
+    
+button.when_pressed = on_press
+button.when_released = on_release
 
 # Test the LEDs
 for led in leds:
@@ -117,8 +134,9 @@ time.sleep(1.01)
 # Connect to Wi-Fi
 try:
     connect_wlan()
-    for led in leds:
-        led.blink(on_time=0.01, n=1, wait=True) # Synchronous
+    for led_group in [[0, 5], [1, 6], [2, 7], [3, 8], [4, 9]]:
+        leds[led_group[0]].blink(on_time=0.01, n=1)
+        leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
     log_and_reset(e)
 
@@ -132,7 +150,7 @@ try:
             cons_errs += 1
             if cons_errs == max_cons_errs:
                 raise RuntimeError('Too many consecutive errors')
-            leds[0].blink(on_time=.01, off_time=.25, n=3)
+            indicator_led.blink(on_time=.01, off_time=.25, n=3)
         elif status == 0:
             cons_errs = 0
         # Filter predictions for specified destination
@@ -141,25 +159,24 @@ try:
         etas = list(map(get_eta_in_mins, predictions))
         # Filter out ETAs further out than we can handle with our LED display
         etas = set(filter(lambda e: e < len(leds), etas))
-        if len(etas) > 0:
-            for i, led in enumerate(leds):
-                # Loop through all LEDs for which there is an ETA
-                if i in etas:
-                    # Turn ETA LED on if not already
-                    if not led.is_active:
-                        if i == 0:
-                            led.pulse(fade_in_time=1, fade_out_time=2)
-                        else:
-                            led.on()
-                        # Play notification if scheduled
-                        if i == notif_mins_out and notif_scheduled:
-                            notif_scheduled = False
-                            speaker.play(notif_sound, wait=False)
-                # Turn off LEDs that don't have an associated ETA
-                else:
-                    led.off()
-        elif status == 0:
-                leds[0].pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
+        for i, led in enumerate(leds):
+            # Loop through all LEDs for which there is an ETA
+            if i in etas:
+                # Turn ETA LED on if not already
+                if not led.is_active:
+                    if i == 0:
+                        led.pulse(fade_in_time=1, fade_out_time=2)
+                    else:
+                        led.on()
+                    # Play notification if scheduled
+                    if i == notif_mins_out and notif_scheduled:
+                        notif_scheduled = False
+                        speaker.play(notif_sound, wait=False)
+            # Turn off LEDs that don't have an associated ETA
+            else:
+                led.off()
+        if status == 0 and len(etas) == 0:
+            indicator_led.pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
         time.sleep(api_interval)
 except Exception as e:
