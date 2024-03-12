@@ -23,6 +23,7 @@ notif_sound = [ ['e5', 1/4], # So Long, Farewell (Sound of Music)
 ###
 # Globals
 #
+
 leds = [LED(0), LED(1), LED(4), LED(5), LED(6),
         LED(7), LED(9), LED(10), LED(11), LED(12)]
 speaker = Speaker(18)
@@ -126,6 +127,11 @@ def check_scheduled_reset():
     if hour == reset_hour and hours_since_startup > 1:
         log_and_reset('Performing scheduled reset')
 
+###
+# Main
+#
+
+# Event handler registration
 button.when_pressed = on_press
 button.when_released = on_release
 
