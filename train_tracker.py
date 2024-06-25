@@ -5,33 +5,35 @@ from picozero import LED, Speaker, Button
 # Configuration
 #
 
-station_id = '41180' # Kedzie to Loop (Brown Line)
-dest_name = 'Loop'   # Destination to filter trains at the above stop
-notif_mins_out = 4   # How many mins out an ETA will trigger the notification
-wlan_ssid = 'West 2G'
-wlan_password = 'fudgiemilkyway204'
-api_key = 'baeac4e81d284f258876778afedacb25'
-api_interval = 15
-max_cons_errs = 8
-reset_hour = 3 # Which hour to reset each day (0-23)
-notif_sound = [ ['e5', 1/4], # So Long, Farewell (Sound of Music)
-                ['g5', 3/4], ['e5', 1/4], ['g5', 3/4], ['e5', 1/4],
-                ['c5', 1/4], ['d5', 1/4], ['e5', 1/4], ['f5', 1/4], ['g5', 1/4], ['a5', 2/4], ['e5', 1/4],
-                ['g5', 3/4], ['e5', 1/4], ['g5', 3/4], ['e5', 1/4],
-                ['c5', 1/4], ['d5', 1/4], ['e5', 1/4], ['f5', 1/4], ['g5', 1/4], ['a5', 2/4], [None, 1/4] ]
+from config import (
+    STATION_ID,
+    DEST_NAME,
+    NOTIF_MINS_OUT,
+    WLAN_SSID,
+    WLAN_PASSWORD,
+    API_KEY,
+    API_INTERVAL,
+    MAX_CONS_ERRS,
+    RESET_HOUR,
+    NOTIF_SOUND,
+    LED_PINS,
+    INDICATOR_LED_INDEX,
+    BUTTON_PIN,
+    SPEAKER_PIN
+    )
+
 
 ###
 # Globals
 #
 
-leds = [LED(0), LED(1), LED(4), LED(5), LED(6),
-        LED(7), LED(9), LED(10), LED(11), LED(12)]
-speaker = Speaker(18)
-button = Button(21)
-indicator_led = leds[9]
+leds = list(map(lambda pin: LED(pin), LED_PINS))
+speaker = Speaker(SPEAKER_PIN)
+button = Button(BUTTON_PIN)
+indicator_led = leds[INDICATOR_LED_INDEX]
 api_url = ('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
-    + '?mapid=' + station_id
-    + '&key=' + api_key
+    + '?mapid=' + STATION_ID
+    + '&key=' + API_KEY
     + '&outputType=JSON')
 cons_errs = 0
 notif_scheduled = False
@@ -41,7 +43,7 @@ startup_ticks = time.ticks_ms()
 def connect_wlan():
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
-    wlan.connect(wlan_ssid, wlan_password)
+    wlan.connect(WLAN_SSID, WLAN_PASSWORD)
     # Wait for connect or fail
     max_wait = 10
     while max_wait > 0:
@@ -55,7 +57,7 @@ def connect_wlan():
         raise RuntimeError('Connection failed ({})'.format(wlan.status()))
     else:
         status = wlan.ifconfig()
-        print('Connected to {} (IP={})'.format(wlan_ssid, status[0]))
+        print('Connected to {} (IP={})'.format(WLAN_SSID, status[0]))
 
 def fetch_predictions():
     try:
@@ -91,6 +93,9 @@ def get_eta_in_mins(prediction):
     eta_mins = (arr_secs - pre_secs) // 60
     return eta_mins
 
+def get_is_for_dest(prediction):
+    return prediction['destNm'] == DEST_NAME
+
 def log_and_reset(err_or_str):
     print(err_or_str)
     print('Reset in 30 seconds...')
@@ -124,7 +129,7 @@ def check_scheduled_reset():
     (_, _, _, hour, _, _, _, _) = time.localtime()
     startup_diff = time.ticks_diff(time.ticks_ms(), startup_ticks)
     hours_since_startup = startup_diff / 1000 / 60 / 60
-    if hour == reset_hour and hours_since_startup > 1:
+    if hour == RESET_HOUR and hours_since_startup > 1:
         log_and_reset('Performing scheduled reset')
 
 ###
@@ -159,13 +164,13 @@ try:
             # Keep track of consecutive errors
             # If too many consecutive errors, throw an error
             cons_errs += 1
-            if cons_errs == max_cons_errs:
+            if cons_errs == MAX_CONS_ERRS:
                 raise RuntimeError('Too many consecutive errors')
             indicator_led.blink(on_time=.01, off_time=.25, n=3)
         elif status == 0:
             cons_errs = 0
         # Filter predictions for specified destination
-        predictions = list(filter(lambda p: p['destNm'] == dest_name, predictions))
+        predictions = list(filter(get_is_for_dest, predictions))
         # Convert predictions to ETAs (in minutes)
         etas = list(map(get_eta_in_mins, predictions))
         # Filter out ETAs further out than we can handle with our LED display
@@ -180,15 +185,15 @@ try:
                     else:
                         led.on()
                     # Play notification if scheduled
-                    if i == notif_mins_out and notif_scheduled:
+                    if i == NOTIF_MINS_OUT and notif_scheduled:
                         notif_scheduled = False
-                        speaker.play(notif_sound, wait=False)
+                        speaker.play(NOTIF_SOUND, wait=False)
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
         if status == 0 and len(etas) == 0:
             indicator_led.pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
-        time.sleep(api_interval)
+        time.sleep(API_INTERVAL)
 except Exception as e:
     log_and_reset(e)
