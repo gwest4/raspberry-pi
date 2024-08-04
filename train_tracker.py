@@ -1,4 +1,4 @@
-import json, machine, network, re, requests, time
+import json, machine, network, re, requests, time, gc
 from picozero import LED, Speaker, Button
 
 ###
@@ -191,6 +191,8 @@ try:
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
+        # Manually call garbage collector
+        gc.collect()
         # Wait for the next API call
         time.sleep(API_INTERVAL)
 except Exception as e:
