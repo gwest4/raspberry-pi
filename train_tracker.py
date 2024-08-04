@@ -95,6 +95,10 @@ def get_eta_in_mins(prediction):
 
 def get_is_for_dest(prediction):
     return prediction['destNm'] == DEST_NAME
+        
+def blink_all(**kwargs):
+    for led in leds:
+        led.blink(**kwargs)
 
 def log_and_reset(err_or_str):
     print(err_or_str)
@@ -141,9 +145,8 @@ button.when_pressed = on_press
 button.when_released = on_release
 
 # Test the LEDs
-for led in leds:
-    led.blink(n=1)
-time.sleep(1.01)
+blink_all(n=1)
+time.sleep(2)
 
 # Connect to Wi-Fi
 try:
