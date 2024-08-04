@@ -199,4 +199,5 @@ try:
         # Wait for the next API call
         time.sleep(API_INTERVAL)
 except Exception as e:
+    blink_all()
     log_and_reset(e)
