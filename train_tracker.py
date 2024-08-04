@@ -191,8 +191,6 @@ try:
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
-        if status == 0 and len(etas) == 0:
-            indicator_led.pulse(fade_in_time=.01, fade_out_time=.25, n=1, fps=50)
         # Wait for the next API call
         time.sleep(API_INTERVAL)
 except Exception as e:
