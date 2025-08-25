@@ -1,4 +1,4 @@
-import json, machine, network, re, requests, time
+import gc, json, machine, network, re, requests, time
 from picozero import LED, Speaker, Button
 
 ###
@@ -135,6 +135,15 @@ def check_scheduled_reset():
     hours_since_startup = startup_diff / 1000 / 60 / 60
     if hour == RESET_HOUR and hours_since_startup > 1:
         log_and_reset('Performing scheduled reset')
+        
+def check_gc_collect():
+    alloc = gc.mem_alloc()
+    free = gc.mem_free()
+    total = alloc + free
+    alloc_ratio = alloc / total
+    # print('Memory usage: {}%'.format(alloc_ratio * 100, alloc, total))
+    if alloc_ratio > .8:
+        gc.collect()
 
 ###
 # Main
@@ -194,6 +203,8 @@ try:
             # Turn off LEDs that don't have an associated ETA
             else:
                 led.off()
+        # Preemptively free memory
+        check_gc_collect()
         # Wait for the next API call
         time.sleep(API_INTERVAL)
 except Exception as e:
