@@ -1,4 +1,4 @@
-import gc, json, machine, network, re, requests, time
+import gc, json, machine, network, os, re, requests, time
 from picozero import LED, Speaker, Button
 
 ###
@@ -99,10 +99,18 @@ def get_is_for_dest(prediction):
 def blink_all(**kwargs):
     for led in leds:
         led.blink(**kwargs)
+        
+def log(*args):
+    (y, mo, d, h, m, s, _, _) = time.localtime()
+    ts = '[{}-{}-{:02} {}:{:02}:{:02}]'.format(y, mo, d, h, m, s)
+    f = open('log', 'w')
+    print(*args)
+    print(ts, *args, file=f)
+    f.close()
 
-def log_and_reset(err_or_str):
-    print(err_or_str)
-    print('Reset in 30 seconds...')
+def log_and_reset(*args):
+    log(*args)
+    log('Reset in 30 seconds...')
     time.sleep(30)
     machine.reset()
 
