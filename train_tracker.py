@@ -50,14 +50,14 @@ def connect_wlan():
         if wlan.status() < 0 or wlan.status() >= 3:
             break
         max_wait -= 1
-        print('Waiting for connection...')
+        log('Waiting for connection...')
         time.sleep(1)
     # Handle connection error
     if wlan.status() != 3:
         raise RuntimeError('Connection failed ({})'.format(wlan.status()))
     else:
         status = wlan.ifconfig()
-        print('Connected to {} (IP={})'.format(WLAN_SSID, status[0]))
+        log('Connected to {} (IP={})'.format(WLAN_SSID, status[0]))
 
 def fetch_predictions():
     try:
@@ -112,6 +112,7 @@ def log_and_reset(*args):
     log(*args)
     log('Reset in 30 seconds...')
     time.sleep(30)
+    log('Calling machine.reset()')
     machine.reset()
 
 # Schedule/unschedule notifications with the button
@@ -157,6 +158,8 @@ def check_gc_collect():
 # Main
 #
 
+log('Initializing...')
+
 # Event handler registration
 button.when_pressed = on_press
 button.when_released = on_release
@@ -172,7 +175,7 @@ try:
         leds[led_group[0]].blink(on_time=0.01, n=1)
         leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
-    log_and_reset(e)
+    log_and_reset(e or 'Unknown exception')
 
 # Run the main loop
 try:
@@ -217,4 +220,4 @@ try:
         time.sleep(API_INTERVAL)
 except Exception as e:
     blink_all()
-    log_and_reset(e)
+    log_and_reset(e or 'Unknown exception')
