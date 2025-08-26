@@ -111,6 +111,7 @@ def log(*args):
 def log_and_reset(*args):
     log(*args)
     log('Reset in 30 seconds...')
+    blink_all()
     time.sleep(30)
     log('Calling machine.reset()')
     machine.reset()
@@ -226,5 +227,4 @@ try:
         # Wait for the next API call
         time.sleep(API_INTERVAL)
 except Exception as e:
-    blink_all()
     log_and_reset(e)
