@@ -175,7 +175,7 @@ try:
         leds[led_group[0]].blink(on_time=0.01, n=1)
         leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
-    log_and_reset(e or 'Unknown exception')
+    log_and_reset(e)
     
 # Sync time
 try:
@@ -227,4 +227,4 @@ try:
         time.sleep(API_INTERVAL)
 except Exception as e:
     blink_all()
-    log_and_reset(e or 'Unknown exception')
+    log_and_reset(e)
