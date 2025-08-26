@@ -104,7 +104,7 @@ def log(*args):
     (y, mo, d, h, m, s, _, _) = time.localtime()
     ts = '[{}-{}-{:02} {}:{:02}:{:02}]'.format(y, mo, d, h, m, s)
     f = open('log', 'a')
-    print(*args)
+    print(ts, *args)
     print(ts, *args, file=f)
     f.close()
 
