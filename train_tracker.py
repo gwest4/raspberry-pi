@@ -1,4 +1,4 @@
-import gc, json, machine, network, os, re, requests, time
+import gc, json, machine, network, ntptime, os, re, requests, time
 from picozero import LED, Speaker, Button
 
 ###
@@ -176,6 +176,13 @@ try:
         leds[led_group[1]].blink(on_time=0.01, n=1, wait=True) # Synchronous
 except RuntimeError as e:
     log_and_reset(e or 'Unknown exception')
+    
+# Sync time
+try:
+    ntptime.settime()
+    log('Local time set'.format(time.localtime()))
+except Exception as e:
+    log_and_reset(e)
 
 # Run the main loop
 try:
