@@ -1,4 +1,4 @@
-import gc, json, machine, network, ntptime, os, re, requests, time
+import gc, json, machine, network, ntptime, os, re, requests, sys, time
 from picozero import LED, Speaker, Button
 
 ###
@@ -103,10 +103,16 @@ def blink_all(**kwargs):
 def log(*args):
     (y, mo, d, h, m, s, _, _) = time.localtime()
     ts = '[{}-{}-{:02} {}:{:02}:{:02}]'.format(y, mo, d, h, m, s)
-    f = open('log', 'a')
-    print(ts, *args)
-    print(ts, *args, file=f)
-    f.close()
+    # Create or append to logfile
+    logfile = open('log', 'a')
+    # Print to both logfile and sys.stdout
+    for out in [logfile, sys.stdout]:
+        if args[0] and isinstance(args[0], Exception):
+            print(ts, file=out)
+            sys.print_exception(args[0], out)
+        else:
+            print(ts, *args, file=out)
+    logfile.close()
 
 def log_and_reset(*args):
     log(*args)
