@@ -50,7 +50,6 @@ def connect_wlan():
         if wlan.status() < 0 or wlan.status() >= 3:
             break
         max_wait -= 1
-        log('Waiting for connection...')
         time.sleep(1)
     # Handle connection error
     if wlan.status() != 3:
