@@ -186,8 +186,9 @@ except RuntimeError as e:
     
 # Sync time
 try:
+    log('Syncing time over NTP')
     ntptime.settime()
-    log('Local time set'.format(time.localtime()))
+    log('Local time synced')
 except Exception as e:
     log_and_reset(e)
 
