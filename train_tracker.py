@@ -168,6 +168,7 @@ def update():
                 else:
                     led.on()
                 # Play notification if scheduled
+                global notif_scheduled
                 if i == NOTIF_MINS_OUT and notif_scheduled:
                     notif_scheduled = False
                     speaker.play(NOTIF_SOUND, wait=False)
