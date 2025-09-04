@@ -211,18 +211,20 @@ except RuntimeError as e:
 try:
     log('Syncing time over NTP')
     ntptime.settime()
-    log('Local time synced')
+    log('Time synced')
 except Exception as e:
     log_and_reset(e)
     
 # Resets the device if not fed on time
 watchdog_timer = machine.WDT(timeout=5000)
+log('Watchdog timer started')
 
 # Run the main loop
 try:
+    log('Running')
     while True:
-        check_update()
         watchdog_timer.feed()
+        check_update()
         check_gc_collect()
         time.sleep(1)
 except Exception as e:
