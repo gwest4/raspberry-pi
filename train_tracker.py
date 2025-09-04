@@ -62,11 +62,10 @@ def fetch_predictions():
         predictions = data['ctatt'].get('eta')
         return (predictions or [], 0)
     except KeyError:
-        print('Unexpected API response:')
-        print(response.text)
+        log('Unexpected API response format')
         return ([], 1)
     except Exception:
-        print('Request failed')
+        log('Request failed')
         return ([], 1)
 
 def parse_date(date_str):
