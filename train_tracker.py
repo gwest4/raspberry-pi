@@ -13,8 +13,6 @@ from config import (
     WLAN_PASSWORD,
     API_KEY,
     API_INTERVAL,
-    MAX_CONS_ERRS,
-    RESET_HOUR,
     NOTIF_SOUND,
     LED_PINS,
     INDICATOR_LED_INDEX,
@@ -35,10 +33,9 @@ api_url = ('http://lapi.transitchicago.com/api/1.0/ttarrivals.aspx'
     + '?mapid=' + STATION_ID
     + '&key=' + API_KEY
     + '&outputType=JSON')
-cons_errs = 0
 notif_scheduled = False
 timer = None
-startup_ticks = time.ticks_ms()
+last_update_ticks = 0
 
 def connect_wlan():
     wlan = network.WLAN(network.STA_IF)
@@ -143,13 +140,6 @@ def on_release():
         timer.deinit()
         timer = None
         schedule_notif()
-    
-def check_scheduled_reset():
-    (_, _, _, hour, _, _, _, _) = time.localtime()
-    startup_diff = time.ticks_diff(time.ticks_ms(), startup_ticks)
-    hours_since_startup = startup_diff / 1000 / 60 / 60
-    if hour == RESET_HOUR and hours_since_startup > 1:
-        log_and_reset('Performing scheduled reset')
         
 def check_gc_collect():
     alloc = gc.mem_alloc()
@@ -159,6 +149,40 @@ def check_gc_collect():
     # print('Memory usage: {}%'.format(alloc_ratio * 100, alloc, total))
     if alloc_ratio > .8:
         gc.collect()
+        
+def update():
+    # Get all predictions for the specified station
+    predictions, _ = fetch_predictions()
+    # Filter predictions for specified destination
+    predictions = list(filter(get_is_for_dest, predictions))
+    # Convert predictions to ETAs (in minutes)
+    etas = list(map(get_eta_in_mins, predictions))
+    # Filter out ETAs further out than we can handle with our LED display
+    etas = set(filter(lambda e: e < len(leds), etas))
+    for i, led in enumerate(leds):
+        # Loop through all LEDs for which there is an ETA
+        if i in etas:
+            # Turn ETA LED on if not already
+            if not led.is_active:
+                if i == 0:
+                    led.pulse(fade_in_time=1, fade_out_time=2)
+                else:
+                    led.on()
+                # Play notification if scheduled
+                if i == NOTIF_MINS_OUT and notif_scheduled:
+                    notif_scheduled = False
+                    speaker.play(NOTIF_SOUND, wait=False)
+        # Turn off LEDs that don't have an associated ETA
+        else:
+            led.off()
+            
+def check_update():
+    global last_update_ticks
+    last_update_diff = time.ticks_diff(time.ticks_ms(), last_update_ticks)
+    secs_since_last_update = last_update_diff / 1000
+    if secs_since_last_update > API_INTERVAL:
+        last_update_ticks = time.ticks_ms()
+        update()
 
 ###
 # Main
@@ -190,47 +214,16 @@ try:
     log('Local time synced')
 except Exception as e:
     log_and_reset(e)
+    
+# Resets the device if not fed on time
+watchdog_timer = machine.WDT(timeout=5000)
 
 # Run the main loop
 try:
     while True:
-        check_scheduled_reset()
-        # Get all predictions for the specified station
-        predictions, status = fetch_predictions()
-        if status == 1:
-            # Keep track of consecutive errors
-            # If too many consecutive errors, throw an error
-            cons_errs += 1
-            if cons_errs == MAX_CONS_ERRS:
-                raise RuntimeError('Too many consecutive errors')
-            indicator_led.blink(on_time=.01, off_time=.25, n=3)
-        elif status == 0:
-            cons_errs = 0
-        # Filter predictions for specified destination
-        predictions = list(filter(get_is_for_dest, predictions))
-        # Convert predictions to ETAs (in minutes)
-        etas = list(map(get_eta_in_mins, predictions))
-        # Filter out ETAs further out than we can handle with our LED display
-        etas = set(filter(lambda e: e < len(leds), etas))
-        for i, led in enumerate(leds):
-            # Loop through all LEDs for which there is an ETA
-            if i in etas:
-                # Turn ETA LED on if not already
-                if not led.is_active:
-                    if i == 0:
-                        led.pulse(fade_in_time=1, fade_out_time=2)
-                    else:
-                        led.on()
-                    # Play notification if scheduled
-                    if i == NOTIF_MINS_OUT and notif_scheduled:
-                        notif_scheduled = False
-                        speaker.play(NOTIF_SOUND, wait=False)
-            # Turn off LEDs that don't have an associated ETA
-            else:
-                led.off()
-        # Preemptively free memory
+        check_update()
+        watchdog_timer.feed()
         check_gc_collect()
-        # Wait for the next API call
-        time.sleep(API_INTERVAL)
+        time.sleep(1)
 except Exception as e:
     log_and_reset(e)
