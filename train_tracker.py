@@ -222,7 +222,7 @@ try:
     ntptime.settime()
     log('Time synced')
 except Exception as e:
-    log_and_reset(e)
+    log(e)
     
 # Resets the device if not fed on time
 watchdog_timer = machine.WDT(timeout=5000)
