@@ -95,6 +95,12 @@ def blink_all(**kwargs):
     for led in leds:
         led.blink(**kwargs)
         
+def check_delete_log():
+    (_, _, _, _, _, _, bytes_size, _, _, _) = os.stat('log')
+    max_size = 200*1024 # 200KB
+    if bytes_size > max_size:
+        os.remove('log')
+        
 def log(*args):
     (y, mo, d, h, m, s, _, _) = time.localtime()
     ts = '[{}-{}-{:02} {}:{:02}:{:02}]'.format(y, mo, d, h, m, s)
@@ -197,6 +203,9 @@ button.when_released = on_release
 # Test the LEDs
 blink_all(n=1)
 time.sleep(2)
+
+# Check log file size and delete if large enough
+check_delete_log()
 
 # Connect to Wi-Fi
 try:
